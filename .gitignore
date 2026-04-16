@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
 .env
-# data/raw/*
-# data/processed/*
+data/raw/*
+data/processed/*
 .ipynb_checkpoints/
