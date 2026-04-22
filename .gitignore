@@ -1,6 +1,1 @@
-__pycache__/
-*.pyc
-.env
-data/raw/*
-data/processed/*
-.ipynb_checkpoints/
+data/metadata/emails.csv
