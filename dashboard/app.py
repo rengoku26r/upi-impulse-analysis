@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import os
 
+import nltk
+nltk.download('stopwords', quiet=True)
+nltk.download('punkt', quiet=True)
+
 st.set_page_config(page_title="UPI Impulse Analysis", layout="wide")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
