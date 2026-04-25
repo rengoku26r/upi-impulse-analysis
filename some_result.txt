@@ -1,0 +1,48 @@
+Mean Polarity: 0.0246655328798186
+Mean Subjectivity: 0.33301870748299317
+
+		  polarity  regret_intensity
+polarity          1.000000          0.020296
+regret_intensity  0.020296          1.000000
+
+impulse_composite_score  pct_unplanned_avg  avg_weekly_tx  \
+cluster                                                              
+0                       1.594697          35.454545      10.045455   
+1                       2.250000          65.000000      15.750000   
+2                       1.931452          33.870968       9.161290   
+
+         regret_frequency  balance_check_habit  ran_out_of_money  \
+cluster                                                            
+0                1.090909             1.606061          1.166667   
+1                2.000000             1.625000          2.750000   
+2                1.000000             1.774194          1.516129   
+
+         hidden_purchase  tracks_expenses  flag_morning  flag_afternoon  \
+cluster                                                                   
+0               0.969697         1.121212      0.030303        0.136364   
+1               1.750000         0.750000      0.500000        0.500000   
+2               0.548387         1.000000      0.225806        0.322581   
+
+         flag_evening  flag_latenight  flag_postmidnight  
+cluster                                                   
+0               1.000        0.242424           0.015152  
+1               0.875        1.000000           1.000000  
+2               0.000        0.580645           0.000000
+
+cluster_name
+Routine Evening Spenders    66
+Controlled Spenders         31
+High Impulsive Spenders      8
+Name: count, dtype: int64
+
+Accuracy: 0.6190476190476191
+
+Classification Report:
+               precision    recall  f1-score   support
+
+           0       0.69      0.79      0.73        14
+           1       0.40      0.29      0.33         7
+
+    accuracy                           0.62        21
+   macro avg       0.54      0.54      0.53        21
+weighted avg       0.59      0.62      0.60        21
