@@ -27,14 +27,7 @@ using real survey data collected from Indian college students.
 ---
 
 # 🚀 Live Dashboard
-
-## 🌐 Streamlit App
-
-Add your deployed Streamlit link here:
-
-```text
-https://upi-impulse-analysis-263.streamlit.app/
-```
+🌐 [Streamlit App](https://upi-impulse-analysis-263.streamlit.app/)
 
 ---
 
@@ -118,10 +111,11 @@ upi-impulse-analysis/
 │   ├── 02_eda.ipynb
 │   ├── 03_nlp.ipynb
 │   ├── 04_ml.ipynb
-│   └── 05_plotly_dashboard_prep.ipynb
+│   ├── 05_plotly_dashboard_prep.ipynb
+│   └── 06_email_generation.ipynb
 │
 ├── reports/
-│   ├── Report_Major_Project.pdf
+│   ├── Report.pdf
 │   └── figures/
 │
 ├── requirements.txt
@@ -197,9 +191,9 @@ The project identifies multiple behavioral personas using KMeans clustering:
 
 | Persona | Characteristics |
 |---|---|
-| High Impulsive Spenders | High regret, frequent impulsive purchases |
-| Controlled Spenders | Financially disciplined, lower regret |
-| Convenience Spenders | Frequent food delivery and habit-based spending |
+| Routine Evening Spenders | Convenience-driven evening spending |
+| High Impulsive Spenders | High regret and impulsive behavior |
+| Controlled Spenders | Financially disciplined users |
 
 ---
 
@@ -242,6 +236,7 @@ Used for:
 | 03_nlp.ipynb | NLP processing and analysis |
 | 04_ml.ipynb | Machine Learning models |
 | 05_plotly_dashboard_prep.ipynb | Interactive Plotly visualizations |
+| 06_email_generation.ipynb | Genreting insigts for mail |
 
 ---
 
@@ -264,12 +259,7 @@ Used for:
 ---
 
 # 📄 Research Report
-
-## Major Project Report
-
-```text
-reports/Report.pdf
-```
+[Project Report](reports/Report.pdf)
 
 ---
 
