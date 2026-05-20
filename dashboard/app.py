@@ -684,7 +684,7 @@ elif page == "NLP Insights":
                 if word not in stop_words
             ]
 
-            common_words = Counter(clean_words).most_common(5)
+            common_words = Counter(filtered_words).most_common(5)
 
             word_df = pd.DataFrame(
                 common_words,
