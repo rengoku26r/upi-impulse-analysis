@@ -3,7 +3,10 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+from textblob import TextBlob
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 import os
 
 # =========================================================
@@ -18,7 +21,55 @@ st.set_page_config(
 )
 
 # =========================================================
-# PATHS
+# CUSTOM CSS
+# =========================================================
+
+st.markdown("""
+<style>
+
+.main {
+    background-color: #07111f;
+    color: white;
+}
+
+section[data-testid="stSidebar"] {
+    background-color: #0f172a;
+}
+
+.block-container {
+    padding-top: 2rem;
+}
+
+.hero-box {
+    background: linear-gradient(135deg,#111827,#1e3a8a);
+    padding: 35px;
+    border-radius: 25px;
+    border: 1px solid #334155;
+    margin-bottom: 20px;
+}
+
+.metric-card {
+    background: linear-gradient(135deg,#111827,#1e293b);
+    padding: 20px;
+    border-radius: 18px;
+    border: 1px solid #334155;
+    text-align: center;
+    box-shadow: 0px 0px 20px rgba(0,0,0,0.25);
+}
+
+.insight-box {
+    background-color: #111827;
+    padding: 20px;
+    border-radius: 18px;
+    border-left: 5px solid #6366F1;
+    margin-top: 10px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================================================
+# LOAD DATA
 # =========================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,64 +82,19 @@ DATA_PATH = os.path.join(
     "combined_with_clusters.csv"
 )
 
-# =========================================================
-# LOAD DATA
-# =========================================================
-
 @st.cache_data
 def load_data():
-    df = pd.read_csv(DATA_PATH)
+    return pd.read_csv(DATA_PATH)
 
-    if "respondent_id" in df.columns:
-        df = df.drop("respondent_id", axis=1)
-
-    return df
-
-df = load_data()
+with st.spinner("Analyzing behavioral spending patterns..."):
+    df = load_data()
 
 # =========================================================
-# THEME + CSS
+# CLEANUP
 # =========================================================
 
-st.markdown(
-    """
-    <style>
-
-    .main {
-        background-color: #07111f;
-        color: white;
-    }
-
-    section[data-testid="stSidebar"] {
-        background-color: #0f172a;
-    }
-
-    .metric-card {
-        background: linear-gradient(135deg,#111827,#1e293b);
-        padding: 20px;
-        border-radius: 18px;
-        border: 1px solid #334155;
-        text-align:center;
-        box-shadow: 0px 0px 20px rgba(0,0,0,0.2);
-    }
-
-    .hero {
-        background: linear-gradient(135deg,#111827,#1e3a8a);
-        padding: 35px;
-        border-radius: 25px;
-        margin-bottom: 20px;
-        border: 1px solid #334155;
-    }
-
-    .small-text {
-        color: #94a3b8;
-        font-size: 15px;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+if "respondent_id" in df.columns:
+    df = df.drop("respondent_id", axis=1)
 
 # =========================================================
 # SIDEBAR
@@ -96,32 +102,28 @@ st.markdown(
 
 st.sidebar.title("💸 UPI Impulse Trap v2")
 
-st.sidebar.markdown(
-    """
-Behavioral analytics dashboard exploring:
+st.sidebar.markdown("""
+Behavioral intelligence dashboard exploring:
 
 - Impulsive UPI spending
 - Financial regret
-- Psychological triggers
-- ML-based personas
-"""
-)
+- Emotional triggers
+- Spending personas
+- ML risk prediction
+""")
 
 page = st.sidebar.radio(
-    "Navigation",
+    "Navigate",
     [
         "Executive Overview",
         "Behavioral Analytics",
         "Trigger Intelligence",
         "Financial Risk",
         "Persona Segmentation",
-        "NLP Intelligence"
+        "Live Sentiment Analyzer",
+        "Regret Risk Predictor"
     ]
 )
-
-# =========================================================
-# FILTERS
-# =========================================================
 
 st.sidebar.markdown("---")
 
@@ -135,59 +137,30 @@ year_filter = st.sidebar.multiselect(
     df["college_year"].dropna().unique()
 )
 
-income_filter = st.sidebar.multiselect(
-    "Income Source",
-    df["income_source"].dropna().unique()
-)
-
 if gender_filter:
     df = df[df["gender"].isin(gender_filter)]
 
 if year_filter:
     df = df[df["college_year"].isin(year_filter)]
 
-if income_filter:
-    df = df[df["income_source"].isin(income_filter)]
-
 # =========================================================
-# KPI VALUES
-# =========================================================
-
-total_users = len(df)
-
-high_regret_pct = round(
-    df["high_regret"].mean() * 100,
-    1
-)
-
-avg_impulse = round(
-    df["impulse_composite_score"].mean(),
-    2
-)
-
-avg_tx = round(
-    df["avg_weekly_tx"].mean(),
-    1
-)
-
-# =========================================================
-# COMMON CHART CONFIG
+# COMMON COLORS
 # =========================================================
 
 plot_bg = "#07111f"
 paper_bg = "#07111f"
-font_color = "white"
 
-def update_layout(fig):
+def style_fig(fig, title):
 
     fig.update_layout(
+        title=title,
+        title_x=0.5,
         template="plotly_dark",
         paper_bgcolor=paper_bg,
         plot_bgcolor=plot_bg,
-        font=dict(color=font_color),
-        margin=dict(l=20, r=20, t=60, b=20),
-        title_x=0.5,
-        height=500
+        font=dict(color="white"),
+        height=500,
+        margin=dict(l=20, r=20, t=60, b=20)
     )
 
     return fig
@@ -198,110 +171,121 @@ def update_layout(fig):
 
 if page == "Executive Overview":
 
-    st.markdown(
-        """
-        <div class="hero">
-            <h1>💸 UPI Impulse Trap</h1>
-            <p class="small-text">
-            Behavioral fingerprinting of impulsive digital spending patterns
-            and financial regret among Indian college students.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.markdown("""
+    <div class="hero-box">
+        <h1>💸 UPI Impulse Trap</h1>
+        <p>
+        Behavioral fingerprinting of impulsive digital spending and financial regret
+        among Indian college students using ML + NLP.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    total_users = len(df)
+
+    high_regret_pct = round(
+        df["high_regret"].mean() * 100,
+        1
+    )
+
+    avg_impulse = round(
+        df["impulse_composite_score"].mean(),
+        2
+    )
+
+    avg_tx = round(
+        df["avg_weekly_tx"].mean(),
+        1
     )
 
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <h3>{total_users}</h3>
-                <p>Total Respondents</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown(f"""
+        <div class="metric-card">
+            <h2>{total_users}</h2>
+            <p>Total Respondents</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     with c2:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <h3>{high_regret_pct}%</h3>
-                <p>High Regret Users</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown(f"""
+        <div class="metric-card">
+            <h2>{high_regret_pct}%</h2>
+            <p>High Regret Users</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     with c3:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <h3>{avg_impulse}</h3>
-                <p>Impulse Score</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown(f"""
+        <div class="metric-card">
+            <h2>{avg_impulse}</h2>
+            <p>Impulse Score</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     with c4:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <h3>{avg_tx}</h3>
-                <p>Weekly Transactions</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown(f"""
+        <div class="metric-card">
+            <h2>{avg_tx}</h2>
+            <p>Weekly Transactions</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.markdown("## 📊 Demographic Landscape")
+    st.markdown("## 📊 Demographic Intelligence")
 
     col1, col2 = st.columns(2)
 
     with col1:
 
-        gender_data = (
+        gender_df = (
             df["gender"]
             .value_counts()
             .reset_index()
         )
 
-        gender_data.columns = ["Gender", "Count"]
+        gender_df.columns = ["Gender", "Count"]
 
         fig = px.pie(
-            gender_data,
+            gender_df,
             names="Gender",
             values="Count",
-            hole=0.6
+            hole=0.55
         )
 
-        update_layout(fig)
+        style_fig(fig, "Gender Distribution")
 
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
 
-        year_data = (
+        year_df = (
             df["college_year"]
             .value_counts()
             .reset_index()
         )
 
-        year_data.columns = ["Year", "Count"]
+        year_df.columns = ["Year", "Count"]
 
         fig = px.bar(
-            year_data,
+            year_df,
             x="Year",
             y="Count",
-            text_auto=True
+            text_auto=True,
+            color="Count"
         )
 
-        update_layout(fig)
+        style_fig(fig, "College Year Distribution")
 
         st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("""
+    <div class="insight-box">
+    <b>Key Insight:</b> Majority of students experience impulsive UPI spending
+    during evening and late-night hours, with food delivery emerging as the
+    highest regret category.
+    </div>
+    """, unsafe_allow_html=True)
 
 # =========================================================
 # BEHAVIORAL ANALYTICS
@@ -321,10 +305,7 @@ elif page == "Behavioral Analytics":
 
     time_df = pd.DataFrame({
         "Time": list(time_cols.values()),
-        "Count": [
-            df[col].sum()
-            for col in time_cols.keys()
-        ]
+        "Count": [df[col].sum() for col in time_cols.keys()]
     })
 
     fig = px.bar(
@@ -332,15 +313,13 @@ elif page == "Behavioral Analytics":
         x="Count",
         y="Time",
         orientation="h",
-        text_auto=True,
-        color="Count"
+        color="Count",
+        text_auto=True
     )
 
-    update_layout(fig)
+    style_fig(fig, "Impulse Purchase Timing")
 
     st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("## 💳 Spending Pattern")
 
     col1, col2 = st.columns(2)
 
@@ -349,10 +328,10 @@ elif page == "Behavioral Analytics":
         fig = px.histogram(
             df,
             x="avg_weekly_tx",
-            nbins=20
+            nbins=15
         )
 
-        update_layout(fig)
+        style_fig(fig, "Weekly Transaction Distribution")
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -364,7 +343,7 @@ elif page == "Behavioral Analytics":
             nbins=10
         )
 
-        update_layout(fig)
+        style_fig(fig, "Unplanned Purchase Distribution")
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -389,41 +368,31 @@ elif page == "Trigger Intelligence":
 
     trigger_df = pd.DataFrame({
         "Trigger": list(trigger_cols.values()),
-        "Score": [
+        "Average Score": [
             df[col].mean()
             for col in trigger_cols.keys()
         ]
     })
 
-    trigger_df = trigger_df.sort_values(
-        by="Score",
-        ascending=True
-    )
-
     fig = px.bar(
         trigger_df,
-        x="Score",
+        x="Average Score",
         y="Trigger",
         orientation="h",
-        text_auto=".2f",
-        color="Score"
+        color="Average Score",
+        text_auto=".2f"
     )
 
-    update_layout(fig)
+    style_fig(fig, "Behavioral Trigger Scores")
 
     st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("## 📈 Behavioral Correlation Matrix")
 
     corr_cols = [
         "avg_weekly_tx",
         "pct_unplanned_avg",
         "impulse_composite_score",
         "regret_frequency",
-        "regret_intensity",
-        "balance_check_habit",
-        "ran_out_of_money",
-        "hidden_purchase"
+        "regret_intensity"
     ]
 
     corr = df[corr_cols].corr()
@@ -434,7 +403,7 @@ elif page == "Trigger Intelligence":
         aspect="auto"
     )
 
-    update_layout(fig)
+    style_fig(fig, "Behavioral Correlation Matrix")
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -446,56 +415,37 @@ elif page == "Financial Risk":
 
     st.title("⚠️ Financial Risk Intelligence")
 
-    col1, col2 = st.columns(2)
+    risk_df = (
+        df["high_regret"]
+        .map({
+            0: "Low Risk",
+            1: "High Risk"
+        })
+        .value_counts()
+        .reset_index()
+    )
 
-    with col1:
+    risk_df.columns = ["Risk", "Count"]
 
-        regret_counts = (
-            df["high_regret"]
-            .map({
-                0: "Low Regret",
-                1: "High Regret"
-            })
-            .value_counts()
-            .reset_index()
-        )
+    fig = px.pie(
+        risk_df,
+        names="Risk",
+        values="Count",
+        hole=0.6
+    )
 
-        regret_counts.columns = ["Group", "Count"]
+    style_fig(fig, "Financial Regret Risk Distribution")
 
-        fig = px.pie(
-            regret_counts,
-            names="Group",
-            values="Count",
-            hole=0.55
-        )
+    st.plotly_chart(fig, use_container_width=True)
 
-        update_layout(fig)
-
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-
-        fig = px.box(
-            df,
-            x="high_regret",
-            y="avg_weekly_tx",
-            color="high_regret"
-        )
-
-        update_layout(fig)
-
-        st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("## 📊 Regret Intensity Distribution")
-
-    fig = px.histogram(
+    fig = px.box(
         df,
-        x="regret_intensity",
-        nbins=10,
+        x="high_regret",
+        y="avg_weekly_tx",
         color="high_regret"
     )
 
-    update_layout(fig)
+    style_fig(fig, "Weekly Transactions vs Regret Risk")
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -507,111 +457,235 @@ elif page == "Persona Segmentation":
 
     st.title("🧬 Persona Segmentation")
 
-    if "cluster_name" in df.columns:
+    cluster_df = (
+        df["cluster_name"]
+        .value_counts()
+        .reset_index()
+    )
 
-        cluster_counts = (
-            df["cluster_name"]
-            .value_counts()
-            .reset_index()
-        )
+    cluster_df.columns = ["Cluster", "Count"]
 
-        cluster_counts.columns = ["Cluster", "Count"]
+    fig = px.treemap(
+        cluster_df,
+        path=["Cluster"],
+        values="Count",
+        color="Count"
+    )
 
-        fig = px.treemap(
-            cluster_counts,
-            path=["Cluster"],
-            values="Count",
-            color="Count"
-        )
+    style_fig(fig, "Behavioral Personas")
 
-        update_layout(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
-        st.plotly_chart(fig, use_container_width=True)
+    numeric_df = df.select_dtypes(include="number")
 
-        st.markdown("## 📌 Cluster Profile")
+    cluster_profile = (
+        df.groupby("cluster_name")[numeric_df.columns]
+        .mean()
+        .round(2)
+    )
 
-        numeric_df = df.select_dtypes(include="number")
-
-        cluster_profile = (
-            df.groupby("cluster_name")[numeric_df.columns]
-            .mean()
-            .round(2)
-        )
-
-        st.dataframe(
-            cluster_profile,
-            use_container_width=True
-        )
-
-        compare_col = st.selectbox(
-            "Compare Feature",
-            [
-                "avg_weekly_tx",
-                "impulse_composite_score",
-                "regret_intensity",
-                "pct_unplanned_avg"
-            ]
-        )
-
-        compare_df = (
-            df.groupby("cluster_name")[compare_col]
-            .mean()
-            .reset_index()
-        )
-
-        fig = px.bar(
-            compare_df,
-            x="cluster_name",
-            y=compare_col,
-            color="cluster_name",
-            text_auto=".2f"
-        )
-
-        update_layout(fig)
-
-        st.plotly_chart(fig, use_container_width=True)
+    st.dataframe(
+        cluster_profile,
+        use_container_width=True
+    )
 
 # =========================================================
-# NLP INTELLIGENCE
+# LIVE SENTIMENT ANALYZER
 # =========================================================
 
-elif page == "NLP Intelligence":
+elif page == "Live Sentiment Analyzer":
 
-    st.title("📝 NLP Intelligence")
+    st.title("📝 Live Sentiment Analyzer")
 
-    if "regret_description" in df.columns:
+    st.markdown("""
+Type any regret message or spending thought below and the model
+will analyze emotional polarity.
+""")
 
-        text_df = df[
-            df["regret_description"].notna()
-        ]
+    user_text = st.text_area(
+        "Enter your spending thought",
+        height=180
+    )
 
-        st.metric(
-            "Total Text Responses",
-            len(text_df)
-        )
+    if st.button("Analyze Sentiment"):
 
-        if len(text_df) > 0:
+        if user_text.strip() != "":
 
-            sample_text = np.random.choice(
-                text_df["regret_description"]
+            blob = TextBlob(user_text)
+
+            polarity = blob.sentiment.polarity
+            subjectivity = blob.sentiment.subjectivity
+
+            if polarity > 0.2:
+                sentiment = "Positive 😊"
+
+            elif polarity < -0.2:
+                sentiment = "Negative 😔"
+
+            else:
+                sentiment = "Neutral 😐"
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "Sentiment",
+                sentiment
             )
 
-            st.markdown("## 💬 Random Regret Description")
+            c2.metric(
+                "Polarity",
+                round(polarity, 2)
+            )
 
-            st.info(sample_text)
+            c3.metric(
+                "Subjectivity",
+                round(subjectivity, 2)
+            )
 
-    st.markdown("## 🧠 NLP Insights")
+            fig = go.Figure(
+                go.Indicator(
+                    mode="gauge+number",
+                    value=(polarity + 1) * 50,
+                    title={"text": "Emotional Score"},
+                    gauge={
+                        "axis": {"range": [0, 100]}
+                    }
+                )
+            )
 
-    st.success(
-        """
-        Key patterns discovered from text analysis:
+            style_fig(fig, "Sentiment Gauge")
 
-        • Food delivery dominates regret narratives  
-        • Stress and boredom are dominant emotional triggers  
-        • Late-night purchases show strongest regret association  
-        • Emotional spending > social pressure spending  
-        """
+            st.plotly_chart(fig, use_container_width=True)
+
+# =========================================================
+# REGRET RISK PREDICTOR
+# =========================================================
+
+elif page == "Regret Risk Predictor":
+
+    st.title("🤖 Financial Regret Predictor")
+
+    feature_cols = [
+        "avg_weekly_tx",
+        "pct_unplanned_avg",
+        "impulse_composite_score",
+        "regret_frequency",
+        "balance_check_habit",
+        "ran_out_of_money",
+        "hidden_purchase"
+    ]
+
+    model_df = df[feature_cols + ["high_regret"]].dropna()
+
+    X = model_df[feature_cols]
+    y = model_df["high_regret"]
+
+    scaler = StandardScaler()
+
+    X_scaled = scaler.fit_transform(X)
+
+    model = RandomForestClassifier(
+        n_estimators=100,
+        random_state=42
     )
+
+    model.fit(X_scaled, y)
+
+    st.markdown("### Enter User Behavioral Features")
+
+    avg_tx = st.slider(
+        "Weekly Transactions",
+        1,
+        40,
+        10
+    )
+
+    unplanned = st.slider(
+        "Unplanned Purchase %",
+        0,
+        100,
+        40
+    )
+
+    impulse = st.slider(
+        "Impulse Score",
+        1.0,
+        5.0,
+        2.0
+    )
+
+    regret_freq = st.slider(
+        "Regret Frequency",
+        0,
+        4,
+        1
+    )
+
+    balance = st.slider(
+        "Balance Checking Habit",
+        0,
+        3,
+        2
+    )
+
+    money = st.slider(
+        "Ran Out of Money",
+        0,
+        3,
+        1
+    )
+
+    hidden = st.slider(
+        "Hidden Purchases",
+        0,
+        2,
+        0
+    )
+
+    if st.button("Predict Financial Risk"):
+
+        sample = np.array([[
+            avg_tx,
+            unplanned,
+            impulse,
+            regret_freq,
+            balance,
+            money,
+            hidden
+        ]])
+
+        sample_scaled = scaler.transform(sample)
+
+        pred = model.predict(sample_scaled)[0]
+
+        prob = model.predict_proba(sample_scaled)[0][1]
+
+        if pred == 1:
+
+            st.error(
+                f"⚠️ High Financial Regret Risk ({round(prob*100,1)}%)"
+            )
+
+        else:
+
+            st.success(
+                f"✅ Low Financial Regret Risk ({round((1-prob)*100,1)}%)"
+            )
+
+        fig = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=prob * 100,
+                title={"text": "Regret Risk Score"},
+                gauge={
+                    "axis": {"range": [0, 100]}
+                }
+            )
+        )
+
+        style_fig(fig, "ML Risk Prediction")
+
+        st.plotly_chart(fig, use_container_width=True)
 
 # =========================================================
 # FOOTER
@@ -619,10 +693,14 @@ elif page == "NLP Intelligence":
 
 st.markdown("---")
 
-st.caption(
-    "UPI Impulse Trap v2 • Built with Streamlit + Plotly + ML + NLP"
-)
+st.caption("""
+UPI Impulse Trap v2 • Behavioral Analytics Dashboard
+""")
 
-st.caption(
-    "Developed by Rajnish • IIT Bhilai • DSAI"
-)
+st.caption("""
+Built with Streamlit + Plotly + NLP + Machine Learning
+""")
+
+st.caption("""
+Developed by Rajnish • IIT Bhilai • DSAI
+""")
