@@ -23,7 +23,6 @@ import re
 
 st.set_page_config(
     page_title="UPI Impulse Trap v2",
-    page_icon="💸",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -108,7 +107,7 @@ if "respondent_id" in df.columns:
 # SIDEBAR
 # =========================================================
 
-st.sidebar.title("💸 UPI Impulse Trap v2")
+st.sidebar.title("UPI Impulse Trap v2")
 
 st.sidebar.markdown("""
 Behavioral intelligence dashboard exploring:
@@ -214,7 +213,7 @@ if page == "Executive Overview":
 
     st.markdown("""
     <div class="hero-box">
-        <h1>💸 UPI Impulse Trap</h1>
+        <h1>UPI Impulse Trap</h1>
         <p>
         Behavioral fingerprinting of impulsive digital spending and financial regret
         among Indian college students using ML + NLP.
@@ -273,7 +272,7 @@ if page == "Executive Overview":
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("## 📊 Demographic Intelligence")
+    st.markdown("## Demographic Intelligence")
 
     col1, col2 = st.columns(2)
 
@@ -320,7 +319,7 @@ if page == "Executive Overview":
 
         st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("## 📱 UPI App Ecosystem")
+    st.markdown("## UPI App Ecosystem")
 
     upi_df = (
         df["primary_upi_app"]
@@ -381,7 +380,7 @@ if page == "Executive Overview":
 
 elif page == "Behavioral Analytics":
 
-    st.title("🧠 Behavioral Analytics")
+    st.title("Behavioral Analytics")
 
     time_cols = {
         "flag_morning": "Morning",
@@ -441,7 +440,7 @@ elif page == "Behavioral Analytics":
 
 elif page == "Trigger Intelligence":
 
-    st.title("🔥 Trigger Intelligence")
+    st.title("Trigger Intelligence")
 
     trigger_cols = {
         "trigger_boredom": "Boredom",
@@ -501,7 +500,7 @@ elif page == "Trigger Intelligence":
 
 elif page == "Financial Risk":
 
-    st.title("⚠️ Financial Risk Intelligence")
+    st.title("Financial Risk Intelligence")
 
     risk_df = (
         df["high_regret"]
@@ -537,7 +536,7 @@ elif page == "Financial Risk":
 
     st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("## 🧠 Most Important Risk Factors")
+    st.markdown("## Most Important Risk Factors")
 
     importance_df = pd.DataFrame({
         "Feature": feature_cols,
@@ -584,7 +583,7 @@ elif page == "Financial Risk":
 
 elif page == "Persona Segmentation":
 
-    st.title("🧬 Persona Segmentation")
+    st.title("Persona Segmentation")
 
     cluster_df = (
         df["cluster_name"]
@@ -624,7 +623,7 @@ elif page == "Persona Segmentation":
 
 elif page == "NLP Insights":
 
-    st.title("📝 NLP Insights")
+    st.title("NLP Insights")
 
     if "regret_description" in df.columns:
 
@@ -690,8 +689,8 @@ elif page == "NLP Insights":
                 common_words,
                 columns=["Word", "Frequency"]
             )
-
-            st.markdown("## 🔥 Most Common Regret Words")
+            word_df.index+=1
+            st.markdown("## Most Common Regret Words")
 
             st.dataframe(
                 word_df,
@@ -728,7 +727,7 @@ elif page == "NLP Insights":
 
 elif page == "Regret Risk Predictor":
 
-    st.title("🤖 Financial Regret Predictor")
+    st.title("Financial Regret Predictor")
 
     st.markdown("### Enter User Behavioral Features")
 
@@ -802,13 +801,13 @@ elif page == "Regret Risk Predictor":
         if pred == 1:
 
             st.error(
-                f"⚠️ High Financial Regret Risk ({round(prob*100,1)}%)"
+                f"High Financial Regret Risk ({round(prob*100,1)}%)"
             )
 
         else:
 
             st.success(
-                f"✅ Low Financial Regret Risk ({round((1-prob)*100,1)}%)"
+                f"Low Financial Regret Risk ({round((1-prob)*100,1)}%)"
             )
 
         fig = go.Figure(
@@ -834,10 +833,6 @@ st.markdown("---")
 
 st.caption("""
 UPI Impulse Trap v2 • Behavioral Analytics Dashboard
-""")
-
-st.caption("""
-Built with Streamlit + Plotly + NLP + Machine Learning
 """)
 
 st.caption("""
