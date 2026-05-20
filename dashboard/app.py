@@ -662,17 +662,17 @@ elif page == "NLP Insights":
 
             stop_words = set(stopwords.words("english"))
 
-            custom_stopwords = {
-                "upi",
-                "purchase",
-                "money",
-                "buy",
-                "bought",
-                "spent",
-                "spending"
-            }
+            # custom_stopwords = {
+            #     "upi",
+            #     "purchase",
+            #     "money",
+            #     "buy",
+            #     "bought",
+            #     "spent",
+            #     "spending"
+            # }
 
-            stop_words.update(custom_stopwords)
+            # stop_words.update(custom_stopwords)
 
             clean_words = re.findall(
                 r'\b[a-zA-Z]{3,}\b',
