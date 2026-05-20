@@ -1,3 +1,7 @@
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-Deployed-red)
+![ML](https://img.shields.io/badge/MachineLearning-RandomForest-green)
+
 # 💸 UPI Impulse Trap Analysis
 
 > Behavioral analytics of impulsive UPI spending and financial regret among Indian college students using Machine Learning, NLP, and Interactive Dashboards.
