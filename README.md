@@ -33,7 +33,7 @@ using real survey data collected from Indian college students.
 Add your deployed Streamlit link here:
 
 ```text
-https://your-streamlit-app-link.streamlit.app
+https://upi-impulse-analysis-263.streamlit.app/
 ```
 
 ---
@@ -99,6 +99,8 @@ Interactive Streamlit Dashboard
 
 ```text
 upi-impulse-analysis/
+│
+├── assets/
 │
 ├── dashboard/
 │   ├── app.py
@@ -266,7 +268,7 @@ Used for:
 ## Major Project Report
 
 ```text
-reports/Report_Major_Project.pdf
+reports/Report.pdf
 ```
 
 ---
