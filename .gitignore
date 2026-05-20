@@ -1,2 +1,5 @@
-data/metadata/emails.csv
 data/processed/participant_insights.csv
+data/raw/*
+data/metadata/*
+data/processed/combined_clean.csv
+data/processed/combined.csv
