@@ -838,3 +838,7 @@ UPI Impulse Trap v2 • Behavioral Analytics Dashboard
 st.caption("""
 Developed by Rajnish • IIT Bhilai • DSAI
 """)
+
+st.info(
+    "This project uses anonymized survey responses for educational and behavioral analytics purposes only."
+)
