@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
 from textblob import TextBlob
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -110,11 +113,11 @@ st.sidebar.title("💸 UPI Impulse Trap v2")
 st.sidebar.markdown("""
 Behavioral intelligence dashboard exploring:
 
-- Impulsive UPI spending
-- Financial regret
-- Emotional triggers
-- Spending personas
-- ML risk prediction
+- Interactive Plotly Analytics
+- ML Risk Prediction
+- Behavioral Personas
+- NLP Wordcloud
+- Financial Regret Analysis
 """)
 
 page = st.sidebar.radio(
@@ -316,6 +319,53 @@ if page == "Executive Overview":
         style_fig(fig, "College Year Distribution")
 
         st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("## 📱 UPI App Ecosystem")
+
+    upi_df = (
+        df["primary_upi_app"]
+        .value_counts()
+        .reset_index()
+    )
+
+    upi_df.columns = ["UPI App", "Users"]
+
+    fig = px.bar(
+        upi_df,
+        x="UPI App",
+        y="Users",
+        color="Users",
+        text_auto=True
+    )
+
+    style_fig(
+        fig,
+        "Most Used UPI Applications"
+    )
+
+    fig.update_layout(
+        xaxis_title="UPI Application",
+        yaxis_title="Number of Users"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    top_app = upi_df.iloc[0]["UPI App"]
+
+    st.markdown(f"""
+    <div class="insight-box">
+
+    <b>Key Insight:</b>
+
+    {top_app} appears to dominate student digital transactions,
+    suggesting strong platform preference and ecosystem dependence
+    among respondents.
+
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("""
     <div class="insight-box">
