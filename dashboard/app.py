@@ -120,7 +120,6 @@ page = st.sidebar.radio(
         "Trigger Intelligence",
         "Financial Risk",
         "Persona Segmentation",
-        "Live Sentiment Analyzer",
         "Regret Risk Predictor"
     ]
 )
@@ -449,6 +448,47 @@ elif page == "Financial Risk":
 
     st.plotly_chart(fig, use_container_width=True)
 
+    st.markdown("## 🧠 Most Important Risk Factors")
+
+    importance_df = pd.DataFrame({
+        "Feature": feature_cols,
+        "Importance": model.feature_importances_
+    })
+
+    importance_df = importance_df.sort_values(
+        by="Importance",
+        ascending=True
+    )
+
+    fig = px.bar(
+        importance_df,
+        x="Importance",
+        y="Feature",
+        orientation="h",
+        text_auto=".3f",
+        color="Importance"
+    )
+
+    style_fig(
+        fig,
+        "Random Forest Feature Importance"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    st.markdown("""
+    <div class="insight-box">
+    <b>Interpretation:</b>
+
+    Features with higher importance contribute more strongly to predicting
+    high financial regret. Impulse score, unplanned spending percentage,
+    and financial stress indicators dominate the model.
+    </div>
+    """, unsafe_allow_html=True)
+
 # =========================================================
 # PERSONA SEGMENTATION
 # =========================================================
@@ -488,74 +528,6 @@ elif page == "Persona Segmentation":
         cluster_profile,
         use_container_width=True
     )
-
-# =========================================================
-# LIVE SENTIMENT ANALYZER
-# =========================================================
-
-elif page == "Live Sentiment Analyzer":
-
-    st.title("📝 Live Sentiment Analyzer")
-
-    st.markdown("""
-Type any regret message or spending thought below and the model
-will analyze emotional polarity.
-""")
-
-    user_text = st.text_area(
-        "Enter your spending thought",
-        height=180
-    )
-
-    if st.button("Analyze Sentiment"):
-
-        if user_text.strip() != "":
-
-            blob = TextBlob(user_text)
-
-            polarity = blob.sentiment.polarity
-            subjectivity = blob.sentiment.subjectivity
-
-            if polarity > 0.2:
-                sentiment = "Positive 😊"
-
-            elif polarity < -0.2:
-                sentiment = "Negative 😔"
-
-            else:
-                sentiment = "Neutral 😐"
-
-            c1, c2, c3 = st.columns(3)
-
-            c1.metric(
-                "Sentiment",
-                sentiment
-            )
-
-            c2.metric(
-                "Polarity",
-                round(polarity, 2)
-            )
-
-            c3.metric(
-                "Subjectivity",
-                round(subjectivity, 2)
-            )
-
-            fig = go.Figure(
-                go.Indicator(
-                    mode="gauge+number",
-                    value=(polarity + 1) * 50,
-                    title={"text": "Emotional Score"},
-                    gauge={
-                        "axis": {"range": [0, 100]}
-                    }
-                )
-            )
-
-            style_fig(fig, "Sentiment Gauge")
-
-            st.plotly_chart(fig, use_container_width=True)
 
 # =========================================================
 # REGRET RISK PREDICTOR
