@@ -10,6 +10,9 @@ from sklearn.preprocessing import StandardScaler
 import os
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+from collections import Counter
+from nltk.corpus import stopwords
+import re
 
 # =========================================================
 # PAGE CONFIG
@@ -167,15 +170,38 @@ def style_fig(fig, title):
 
     return fig
 
+# =========================================================
+# GLOBAL ML MODEL
+# =========================================================
+
 feature_cols = [
-        "avg_weekly_tx",
-        "pct_unplanned_avg",
-        "impulse_composite_score",
-        "regret_frequency",
-        "balance_check_habit",
-        "ran_out_of_money",
-        "hidden_purchase"
+    "avg_weekly_tx",
+    "pct_unplanned_avg",
+    "impulse_composite_score",
+    "regret_frequency",
+    "balance_check_habit",
+    "ran_out_of_money",
+    "hidden_purchase"
 ]
+
+model_df = df[
+    feature_cols + ["high_regret"]
+].dropna()
+
+X = model_df[feature_cols]
+
+y = model_df["high_regret"]
+
+scaler = StandardScaler()
+
+X_scaled = scaler.fit_transform(X)
+
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+
+model.fit(X_scaled, y)
 
 # =========================================================
 # EXECUTIVE OVERVIEW
@@ -584,15 +610,31 @@ elif page == "NLP Insights":
 
             st.pyplot(fig)
 
-            from collections import Counter
-            import re
+            stop_words = set(stopwords.words("english"))
+
+            custom_stopwords = {
+                "upi",
+                "purchase",
+                "money",
+                "buy",
+                "bought",
+                "spent",
+                "spending"
+            }
+
+            stop_words.update(custom_stopwords)
 
             clean_words = re.findall(
                 r'\b[a-zA-Z]{3,}\b',
                 combined_text.lower()
             )
+            filtered_words = [
+                word
+                for word in clean_words
+                if word not in stop_words
+            ]
 
-            common_words = Counter(clean_words).most_common(15)
+            common_words = Counter(clean_words).most_common(5)
 
             word_df = pd.DataFrame(
                 common_words,
@@ -637,22 +679,6 @@ elif page == "NLP Insights":
 elif page == "Regret Risk Predictor":
 
     st.title("🤖 Financial Regret Predictor")
-
-    model_df = df[feature_cols + ["high_regret"]].dropna()
-
-    X = model_df[feature_cols]
-    y = model_df["high_regret"]
-
-    scaler = StandardScaler()
-
-    X_scaled = scaler.fit_transform(X)
-
-    model = RandomForestClassifier(
-        n_estimators=100,
-        random_state=42
-    )
-
-    model.fit(X_scaled, y)
 
     st.markdown("### Enter User Behavioral Features")
 
