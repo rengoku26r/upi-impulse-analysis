@@ -8,6 +8,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import os
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 # =========================================================
 # PAGE CONFIG
@@ -120,7 +122,8 @@ page = st.sidebar.radio(
         "Trigger Intelligence",
         "Financial Risk",
         "Persona Segmentation",
-        "Regret Risk Predictor"
+        "NLP Insights",
+        "Regret Risk Predictor",
     ]
 )
 
@@ -163,6 +166,16 @@ def style_fig(fig, title):
     )
 
     return fig
+
+feature_cols = [
+        "avg_weekly_tx",
+        "pct_unplanned_avg",
+        "impulse_composite_score",
+        "regret_frequency",
+        "balance_check_habit",
+        "ran_out_of_money",
+        "hidden_purchase"
+]
 
 # =========================================================
 # EXECUTIVE OVERVIEW
@@ -530,22 +543,100 @@ elif page == "Persona Segmentation":
     )
 
 # =========================================================
+# NLP INSIGHTS
+# =========================================================
+
+elif page == "NLP Insights":
+
+    st.title("📝 NLP Insights")
+
+    if "regret_description" in df.columns:
+
+        text_df = df[
+            df["regret_description"].notna()
+        ]
+
+        st.metric(
+            "Total Text Responses",
+            len(text_df)
+        )
+
+        combined_text = " ".join(
+            text_df["regret_description"]
+            .astype(str)
+            .tolist()
+        )
+
+        if len(combined_text) > 10:
+
+            wordcloud = WordCloud(
+                width=1200,
+                height=600,
+                background_color="black",
+                colormap="viridis"
+            ).generate(combined_text)
+
+            fig, ax = plt.subplots(figsize=(15, 7))
+
+            ax.imshow(wordcloud, interpolation="bilinear")
+
+            ax.axis("off")
+
+            st.pyplot(fig)
+
+            from collections import Counter
+            import re
+
+            clean_words = re.findall(
+                r'\b[a-zA-Z]{3,}\b',
+                combined_text.lower()
+            )
+
+            common_words = Counter(clean_words).most_common(15)
+
+            word_df = pd.DataFrame(
+                common_words,
+                columns=["Word", "Frequency"]
+            )
+
+            st.markdown("## 🔥 Most Common Regret Words")
+
+            st.dataframe(
+                word_df,
+                use_container_width=True
+            )
+
+            st.markdown("""
+            <div class="insight-box">
+
+            <b>Interpretation:</b>
+
+            Frequently occurring words represent dominant regret themes
+            among students. Terms related to food delivery, stress,
+            boredom, and online shopping appear repeatedly.
+
+            </div>
+            """, unsafe_allow_html=True)
+
+        else:
+
+            st.warning(
+                "Not enough text responses available."
+            )
+
+    else:
+
+        st.error(
+            "regret_description column not found."
+        )
+
+# =========================================================
 # REGRET RISK PREDICTOR
 # =========================================================
 
 elif page == "Regret Risk Predictor":
 
     st.title("🤖 Financial Regret Predictor")
-
-    feature_cols = [
-        "avg_weekly_tx",
-        "pct_unplanned_avg",
-        "impulse_composite_score",
-        "regret_frequency",
-        "balance_check_habit",
-        "ran_out_of_money",
-        "hidden_purchase"
-    ]
 
     model_df = df[feature_cols + ["high_regret"]].dropna()
 
